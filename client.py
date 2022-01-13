@@ -4,30 +4,31 @@ import threading
 
 def listen_mensage(client):
     while True:
-        mensage =client.rec_mensage()
+        message =client.rec_message()
         print("("+eval(mensage)['nickname']+")"+
-              ": "+eval(mensage)['mensagem'])
+              ": "+eval(mensage)['message'])
         
-        if eval(mensage)['mensagem']=='Você foi desconectado da sala de chat':
+        if eval(message)['message']=='You have been disconnected from the chat room':
             client.client_socket.close()
             break
     
-def send_mensage(client):
+def send_message(client):
     while True:    
-        mensagem=input('')
-        client.send_mensage(mensagem)
-        if mensagem=='/SAIR':
+        message=input('')
+        client.send_message(message)
+        if message=='/LOGOUT':
             break
 
-user_input = input('Digite /ENTRAR para ENTRAR: ')
-if user_input =='/ENTRAR':
-    nickname =    input('Digite o seu nickname: ')
-    server_ip =   input('Digite o ip do servidor: ')
-    server_port = int(input('Digite a porta associada: '))
-    # Porta: 65432
-    #local_host: '127.0.0.1'
-    client = ChatClient(nickname,server_ip,server_port)
-
+#server_ip =   input('Type the server IP: ')
+#server_port = int(input('Type the server port: '))
+server_ip = '127.0.0.1'
+server_port = 65432
+client = ChatClient(server_ip,server_port)
+user_input = input('Type /LOGIN to LOGIN\nType /SIGNUP to SIGN UP: ')
+if user_input =='/LOGIN':
+    nickname = input('Type your nickname: ')
+    password = input('Type your password: ')
+    client.login(nickname,password)
     print("Conectado com o servidor, pode digitar as mensagens")
 
     t_1 = threading.Thread(target=send_mensage, args=(client,))

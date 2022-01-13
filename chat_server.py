@@ -8,17 +8,30 @@ class ChatServer():
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection_vector = []
-        self.nicknames = []
-        
-    def send_mensage(self,mensagem):
+        self.login = []
+    
+    def check_login(self,nickname,password):
+        for credentials in self.login:
+            if(credentials[0]==nickname and credentials[1]==password):
+                return 1
+        return 0
+
+    def create_account(self,nickname,password):
+        for credentials in self.login:
+            if(credentials[0]==nickname):
+                return 0
+        self.login.append([nickname,password])
+        return 1
+
+    def send_mensage(self,message):
 
         for connection in self.connection_vector:
-            connection.send(mensagem)
+            connection.send(message)
     
     def list_nicknames(self,connection):
 
         connection.send(json.dumps(
-                        {'mensagem':str(self.nicknames),
+                        {'message':str(self.nicknames),
                         'nickname':'Server'}
                         ).encode())
     
@@ -30,9 +43,9 @@ class ChatServer():
                 nickname = self.nicknames.pop(i)
                 return nickname
     
-    def verify_mensage(self,connection,mensagem):
+    def verify_mensage(self,connection,message):
 
-        msg=eval(mensagem.decode())['mensagem']
+        msg=eval(message.decode())['message']
         
         if msg=='/USUARIOS':
             self.list_nicknames(connection)
@@ -40,13 +53,13 @@ class ChatServer():
         
         if msg=='/SAIR':
             connection.send(json.dumps({
-                            'mensagem':'Você foi desconectado da sala de chat',
+                            'message':'You have been disconnected from the chat room',
                             'nickname':'Server'}).encode())
             
             nickname = self.remove_user(connection)
             
             self.send_mensage(json.dumps({
-                                'mensagem':f'{nickname} saiu do chat',
+                                'message':f'{nickname} left the chat room',
                                 'nickname':'Server'}).encode())
             return 2
         

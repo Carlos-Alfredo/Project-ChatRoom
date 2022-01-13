@@ -3,6 +3,8 @@ class ChatUser():
         self.nickname = user_nickname
         self.server_ip = server_ip
         self.server_port = server_port
+    def set_nickname(self,nickname):
+    	self.nickname=nickname
     
         
         
