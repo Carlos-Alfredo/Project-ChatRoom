@@ -3,15 +3,16 @@ import json
 import socket
 import random
 from cbc import cbc_encrypt,cbc_decrypt
+from mod import findPrimitive,isPrime
 
 class ChatClient():
     def __init__(self,server_ip,server_port):
         self.client = ChatUser('',server_ip,server_port)
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((server_ip, server_port))
-        self.public_prime=17
-        self.public_primitive=7
-        self.private_key=random.randint(1,20)
+        self.public_prime= 1528467205757693
+        self.public_primitive=2
+        self.private_key=random.randint(pow(10,100),pow(10,101))
         self.secret_key=self.set_secret()
 
     def set_secret(self):
@@ -21,7 +22,7 @@ class ChatClient():
                                             'generated_key_user':generated_key_user}).encode())
         message=self.client_socket.recv(1024)
         while not message:
-            message=connection.recv(1024)
+            message=self.client_socket.recv(1024)
         generated_key_server=eval(message.decode())['generated_key_server']
         return int(pow(generated_key_server,self.private_key,self.public_prime))
     
@@ -33,8 +34,8 @@ class ChatClient():
         self.client_socket.send(encrypted_message)
         response=self.client_socket.recv(1024)
         while not response:
-            response=connection.recv(1024)
-        response=cbc_decrypt(secret_key,response)
+            response=self.client_socket.recv(1024)
+        response=cbc_decrypt(self.secret_key,response)
         if eval(response.decode())['response']=='You are logged in':
             return 1
         else:
@@ -48,7 +49,7 @@ class ChatClient():
         self.client_socket.send(encrypted_message)
         response=self.client_socket.recv(1024)
         while not response:
-            response=connection.recv(1024)
+            response=self.client_socket.recv(1024)
         response=cbc_decrypt(self.secret_key,response)
         if eval(response.decode())['response']=='Your account has been created':
             return 1
@@ -58,12 +59,15 @@ class ChatClient():
     def rec_message(self):
         message=self.client_socket.recv(1024)
         while not message:
-            message=connection.recv(1024)
+            message=self.client_socket.recv(1024)
         message=cbc_decrypt(self.secret_key,message).decode()
         return message
     
     def send_message(self,message):
-        msg=json.dumps({'message':message}).encode()
+        if message=='/LOGOUT':
+            msg=json.dumps({'message':message,'nickname':'','password':'','operation':'LOGOUT'}).encode()
+        else:
+            msg=json.dumps({'message':message,'nickname':'','password':'','operation':'SENDMESSAGE'}).encode()
         encrypted_message=cbc_encrypt(self.secret_key,msg)
         self.client_socket.send(encrypted_message)
 
